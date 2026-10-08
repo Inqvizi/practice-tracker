@@ -87,7 +87,7 @@ class DashboardScreen extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.md),
         PrimaryButton(
-          text: '+ New entry',
+          text: 'New entry',
           isFullWidth: false,
           icon: const Icon(Icons.add_rounded, size: 18),
           onPressed: () {

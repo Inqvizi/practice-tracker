@@ -256,8 +256,9 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
                                 ),
                                 const SizedBox(width: AppSpacing.md),
                                 PrimaryButton(
-                                  text: '✓ Save entry',
+                                  text: 'Save entry',
                                   isFullWidth: false,
+                                  icon: const Icon(Icons.check_rounded, size: 18),
                                   onPressed: _saveEntry,
                                 ),
                               ],
@@ -486,9 +487,10 @@ class _EntryFormScreenState extends State<EntryFormScreen> {
             ),
             const SizedBox(width: AppSpacing.sm),
             PrimaryButton(
-              text: '+ Add',
+              text: 'Add',
               isFullWidth: false,
               height: 42,
+              icon: const Icon(Icons.add_rounded, size: 16),
               onPressed: _addSkill,
             ),
           ],

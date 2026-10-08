@@ -183,7 +183,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
           ],
         ),
         PrimaryButton(
-          text: '+ Add entry',
+          text: 'Add entry',
           isFullWidth: false,
           icon: const Icon(Icons.add_rounded, size: 18),
           onPressed: () {

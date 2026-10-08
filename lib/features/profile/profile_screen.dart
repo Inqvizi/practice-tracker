@@ -405,8 +405,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: PrimaryButton(
-                text: '✓ Save changes',
+                text: 'Save changes',
                 isFullWidth: false,
+                icon: const Icon(Icons.check_rounded, size: 18),
                 onPressed: _onSaveChanges,
               ),
             ),
