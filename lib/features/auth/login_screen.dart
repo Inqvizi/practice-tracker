@@ -200,8 +200,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: AppSpacing.lg),
 
                           // Sign up link
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               const Text(
                                 'New to Practice Tracker? ',
