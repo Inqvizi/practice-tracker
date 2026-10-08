@@ -44,7 +44,10 @@ class _AppScaffoldState extends State<AppScaffold> {
                 ),
           body: Row(
             children: [
-              if (isDesktop) Sidebar(currentRoute: widget.currentRoute),
+              if (isDesktop)
+                RepaintBoundary(
+                  child: Sidebar(currentRoute: widget.currentRoute),
+                ),
               Expanded(
                 child: Column(
                   children: [
@@ -55,7 +58,9 @@ class _AppScaffoldState extends State<AppScaffold> {
                           : () => _scaffoldKey.currentState?.openDrawer(),
                     ),
                     Expanded(
-                      child: widget.body,
+                      child: RepaintBoundary(
+                        child: widget.body,
+                      ),
                     ),
                   ],
                 ),

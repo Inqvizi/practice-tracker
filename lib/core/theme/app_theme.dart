@@ -22,6 +22,16 @@ abstract final class AppTheme {
       colorScheme: baseColorScheme,
       scaffoldBackgroundColor: AppColors.background,
       dividerColor: AppColors.border,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: SnappyPageTransitionsBuilder(),
+          TargetPlatform.iOS: SnappyPageTransitionsBuilder(),
+          TargetPlatform.windows: SnappyPageTransitionsBuilder(),
+          TargetPlatform.macOS: SnappyPageTransitionsBuilder(),
+          TargetPlatform.linux: SnappyPageTransitionsBuilder(),
+          TargetPlatform.fuchsia: SnappyPageTransitionsBuilder(),
+        },
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
@@ -133,3 +143,26 @@ abstract final class AppTheme {
     );
   }
 }
+
+/// Lightweight fade page transition builder to minimize layout thrashing and jank on web.
+class SnappyPageTransitionsBuilder extends PageTransitionsBuilder {
+  const SnappyPageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return FadeTransition(
+      opacity: CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOut,
+      ),
+      child: child,
+    );
+  }
+}
+
