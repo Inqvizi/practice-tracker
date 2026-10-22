@@ -1,6 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../../features/auth/data/auth_scope.dart';
 import '../constants/app_routes.dart';
-import '../data/mock_data.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import 'app_logo.dart';
@@ -31,16 +32,26 @@ class Sidebar extends StatelessWidget {
     Navigator.of(context).pushReplacementNamed(route);
   }
 
-  void _logOut(BuildContext context) {
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      AppRoutes.login,
-      (route) => false,
-    );
+  Future<void> _logOut(BuildContext context) async {
+    try {
+      final authRepo = AuthScope.of(context);
+      await authRepo.signOut();
+      if (context.mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    } catch (_) {
+      // Ігноруємо помилки або AuthGate оновить інтерфейс
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = MockData.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
+    final displayName = (user?.displayName != null && user!.displayName!.trim().isNotEmpty)
+        ? user.displayName!.trim()
+        : 'Student';
+    final email = user?.email ?? '';
+    final photoUrl = user?.photoURL;
 
     return Container(
       width: AppSpacing.sidebarWidth,
@@ -116,17 +127,25 @@ class Sidebar extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: AppColors.primary,
                         borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        image: (photoUrl != null && photoUrl.isNotEmpty)
+                            ? DecorationImage(
+                                image: NetworkImage(photoUrl),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
                       ),
-                      child: const Center(
-                        child: Text(
-                          '</>',
-                          style: TextStyle(
-                            color: AppColors.textLight,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
+                      child: (photoUrl == null || photoUrl.isEmpty)
+                          ? const Center(
+                              child: Text(
+                                '</>',
+                                style: TextStyle(
+                                  color: AppColors.textLight,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            )
+                          : null,
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
@@ -134,7 +153,7 @@ class Sidebar extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            user.fullName,
+                            displayName,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: AppColors.textPrimary,
@@ -143,7 +162,7 @@ class Sidebar extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            user.specialty,
+                            email.isNotEmpty ? email : 'Student',
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               color: AppColors.textSecondary,

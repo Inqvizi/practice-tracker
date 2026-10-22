@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/data/mock_data.dart';
@@ -52,6 +53,11 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, bool isDesktop) {
+    final user = FirebaseAuth.instance.currentUser;
+    final firstName = (user?.displayName != null && user!.displayName!.trim().isNotEmpty)
+        ? user.displayName!.trim().split(' ').first
+        : 'Student';
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -59,23 +65,23 @@ class DashboardScreen extends StatelessWidget {
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              SectionLabel(
+            children: [
+              const SectionLabel(
                 'Spring term 2025 · Monday, May 26',
                 color: AppColors.textSecondary,
               ),
-              SizedBox(height: AppSpacing.xs + 2),
+              const SizedBox(height: AppSpacing.xs + 2),
               Text(
-                'Welcome back, Oleksandr',
-                style: TextStyle(
+                'Welcome back, $firstName',
+                style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
                   letterSpacing: -0.4,
                 ),
               ),
-              SizedBox(height: 4),
-              Text(
+              const SizedBox(height: 4),
+              const Text(
                 "Here's a clear view of your practice progress this term.",
                 style: TextStyle(
                   color: AppColors.textSecondary,

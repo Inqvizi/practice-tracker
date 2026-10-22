@@ -1,5 +1,6 @@
+import 'dart:math' as math;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../data/mock_data.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 
@@ -15,9 +16,23 @@ class TopBar extends StatelessWidget {
     this.onMenuPressed,
   });
 
+  String _getInitials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return 'ST';
+    if (parts.length == 1) {
+      return parts.first.substring(0, math.min(2, parts.first.length)).toUpperCase();
+    }
+    return '${parts.first[0]}${parts[1][0]}'.toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = MockData.currentUser;
+    final user = FirebaseAuth.instance.currentUser;
+    final displayName = (user?.displayName != null && user!.displayName!.trim().isNotEmpty)
+        ? user.displayName!.trim()
+        : 'Student';
+    final initials = _getInitials(displayName);
+    final photoUrl = user?.photoURL;
 
     return Container(
       height: 64,
@@ -169,14 +184,19 @@ class TopBar extends StatelessWidget {
               CircleAvatar(
                 radius: 16,
                 backgroundColor: AppColors.sidebarActive,
-                child: Text(
-                  user.initials,
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                backgroundImage: (photoUrl != null && photoUrl.isNotEmpty)
+                    ? NetworkImage(photoUrl)
+                    : null,
+                child: (photoUrl == null || photoUrl.isEmpty)
+                    ? Text(
+                        initials,
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      )
+                    : null,
               ),
               if (MediaQuery.of(context).size.width >= 768) ...[
                 const SizedBox(width: AppSpacing.sm),
@@ -185,7 +205,7 @@ class TopBar extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      user.fullName,
+                      displayName,
                       style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 13,
@@ -193,7 +213,7 @@ class TopBar extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      user.role,
+                      user?.email ?? 'Student',
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 11,
