@@ -1,11 +1,12 @@
-import 'dart:math' as math;
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/errors/auth_failure.dart';
+import '../../core/services/avatar_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/validators/validators.dart';
@@ -13,10 +14,11 @@ import '../../core/widgets/app_scaffold.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/section_label.dart';
+import '../../core/widgets/user_avatar.dart';
 import '../auth/data/auth_scope.dart';
 
 /// Screen FR-3 / FR-6: Student profile overview and security settings.
-/// Supports photo picker from preset HTTPS avatars or custom URL,
+/// Supports choosing an avatar file from computer (PNG/JPG), preset Dicebear avatars,
 /// read-only institutional email, personal details modification,
 /// password change with reauthentication, and Sentry diagnostics.
 class ProfileScreen extends StatefulWidget {
@@ -40,6 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late final TextEditingController _confirmPasswordController;
 
   User? _currentUser;
+  Uint8List? _localImageBytes;
   bool _isSavingPersonal = false;
   bool _isChangingPassword = false;
 
@@ -60,6 +63,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _currentPasswordController = TextEditingController();
     _newPasswordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
+
+    _loadLocalAvatar();
+  }
+
+  Future<void> _loadLocalAvatar() async {
+    final uid = _currentUser?.uid;
+    if (uid != null) {
+      final bytes = await AvatarService.getLocalAvatar(uid);
+      if (mounted && bytes != null) {
+        setState(() {
+          _localImageBytes = bytes;
+        });
+      }
+    }
   }
 
   @override
@@ -83,19 +100,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  String _getInitials(String displayName) {
-    final parts = displayName.trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty || parts.first.isEmpty) return 'ST';
-    if (parts.length == 1) {
-      return parts.first.substring(0, math.min(2, parts.first.length)).toUpperCase();
-    }
-    return '${parts.first[0]}${parts[1][0]}'.toUpperCase();
-  }
-
   Future<void> _updateAvatar(String selectedUrl) async {
     try {
       final authRepo = AuthScope.of(context);
       await authRepo.updatePhotoUrl(selectedUrl);
+      final uid = _currentUser?.uid;
+      if (uid != null) {
+        await AvatarService.clearLocalAvatar(uid);
+      }
+      setState(() {
+        _localImageBytes = null;
+      });
       await FirebaseAnalytics.instance.logEvent(name: 'profile_photo_changed');
 
       if (!mounted) return;
@@ -128,6 +143,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _pickImageFromComputer(BuildContext dialogContext) async {
+    try {
+      final picker = ImagePicker();
+      final XFile? picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 600,
+        maxHeight: 600,
+        imageQuality: 85,
+      );
+
+      if (picked != null) {
+        final bytes = await picked.readAsBytes();
+        final uid = _currentUser?.uid;
+        if (uid != null) {
+          await AvatarService.saveLocalAvatar(uid, bytes);
+        }
+        setState(() {
+          _localImageBytes = bytes;
+        });
+
+        await FirebaseAnalytics.instance.logEvent(name: 'profile_photo_changed');
+
+        if (dialogContext.mounted) {
+          Navigator.of(dialogContext).pop();
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Фото з компʼютера успішно завантажено!'),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Помилка завантаження файлу: $e'),
+            backgroundColor: AppColors.danger,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _showAvatarPicker(BuildContext context) async {
     final customUrlController = TextEditingController();
     final pickerFormKey = GlobalKey<FormState>();
@@ -153,7 +217,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
               ),
               title: const Text(
-                'Select profile photo',
+                'Change profile photo',
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w700,
@@ -161,7 +225,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               content: SizedBox(
-                width: 440,
+                width: 460,
                 child: SingleChildScrollView(
                   child: Form(
                     key: pickerFormKey,
@@ -169,11 +233,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Option 1: File from computer
                         const Text(
-                          'Choose one of the verified preset avatars:',
+                          '1. Upload an image file from your computer:',
                           style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () => _pickImageFromComputer(dialogContext),
+                            icon: const Icon(Icons.upload_file_rounded, size: 20),
+                            label: const Text('Choose file from computer (PNG / JPG)'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: const BorderSide(color: AppColors.primary, width: 1.5),
+                              foregroundColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: AppSpacing.lg),
+                        const Divider(),
+                        const SizedBox(height: AppSpacing.md),
+
+                        // Option 2: Presets
+                        const Text(
+                          '2. Or choose one of the preset avatars:',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.md),
@@ -210,14 +307,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             );
                           }).toList(),
                         ),
+
                         const SizedBox(height: AppSpacing.lg),
                         const Divider(),
-                        const SizedBox(height: AppSpacing.sm),
+                        const SizedBox(height: AppSpacing.md),
+
+                        // Option 3: Custom URL
                         const Text(
-                          'Or enter a custom HTTPS image URL:',
+                          '3. Or enter a direct HTTPS image URL:',
                           style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xs + 2),
@@ -234,10 +335,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               return null;
                             }
                             if (value == null || value.trim().isEmpty) {
-                              return 'Оберіть аватар або введіть URL.';
+                              return 'Select an avatar or enter a URL.';
                             }
                             if (!value.trim().startsWith('https://')) {
-                              return 'URL повинен починатися з https://';
+                              return 'URL must start with https://';
                             }
                             return null;
                           },
@@ -273,7 +374,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     if (selectedUrl == null || selectedUrl!.isEmpty) {
                       ScaffoldMessenger.of(this.context).showSnackBar(
                         const SnackBar(
-                          content: Text('Будь ласка, оберіть аватар або введіть URL.'),
+                          content: Text('Please select an avatar, upload a file, or enter a URL.'),
                           backgroundColor: AppColors.danger,
                         ),
                       );
@@ -288,7 +389,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Save photo'),
+                  child: const Text('Save preset / URL'),
                 ),
               ],
             );
@@ -429,7 +530,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Manage your personal information and account security.',
+                      'Manage your student personal information, profile photo, and password security.',
                       style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 14,
@@ -468,8 +569,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildOverviewCard() {
     final displayName = _currentUser?.displayName ??
         '${_firstNameController.text} ${_lastNameController.text}'.trim();
-    final initials = _getInitials(displayName.isEmpty ? 'Student' : displayName);
-    final photoUrl = _currentUser?.photoURL;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
@@ -496,7 +595,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  'Your student profile',
+                  'Your student profile & public avatar',
                   style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 13,
@@ -507,78 +606,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: AppSpacing.xl),
 
-          // Avatar with Photo Selector Button
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: 96,
-                height: 96,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.primaryDark,
-                      AppColors.primaryLight,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: photoUrl != null && photoUrl.isNotEmpty
-                    ? ClipOval(
-                        child: Image.network(
-                          photoUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Center(
-                            child: Text(
-                              initials,
-                              style: const TextStyle(
-                                color: AppColors.textLight,
-                                fontSize: 32,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 1.0,
-                              ),
-                            ),
-                          ),
-                        ),
-                      )
-                    : Center(
-                        child: Text(
-                          initials,
-                          style: const TextStyle(
-                            color: AppColors.textLight,
-                            fontSize: 32,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.0,
-                          ),
-                        ),
+          // Entire Avatar with Hover and Click Action
+          Tooltip(
+            message: 'Click to change profile photo',
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () => _showAvatarPicker(context),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.primary, width: 2),
                       ),
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Material(
-                  color: AppColors.primary,
-                  shape: const CircleBorder(),
-                  elevation: 2,
-                  child: InkWell(
-                    onTap: () => _showAvatarPicker(context),
-                    customBorder: const CircleBorder(),
-                    child: const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Icon(
-                        Icons.camera_alt_rounded,
-                        color: AppColors.textLight,
-                        size: 16,
+                      child: ClipOval(
+                        child: UserAvatar(
+                          user: _currentUser,
+                          radius: 48,
+                          localImageBytes: _localImageBytes,
+                        ),
                       ),
                     ),
-                  ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Material(
+                        color: AppColors.primary,
+                        shape: const CircleBorder(),
+                        elevation: 3,
+                        child: const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Icon(
+                            Icons.camera_alt_rounded,
+                            color: AppColors.textLight,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.xs),
+
+          // Direct Change Photo button
+          TextButton.icon(
+            onPressed: () => _showAvatarPicker(context),
+            icon: const Icon(Icons.add_photo_alternate_outlined, size: 16),
+            label: const Text('Change photo'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
 
           // Full Name & Program Chip
           Text(
@@ -629,7 +716,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: AppColors.textSecondary,
             ),
             helperText:
-                'Email cannot be changed here. It is managed by your university.',
+                'Email cannot be changed here. It is institutional and managed by the university.',
           ),
         ],
       ),

@@ -1,11 +1,13 @@
-import 'dart:math' as math;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../../features/auth/data/auth_scope.dart';
+import '../constants/app_routes.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import 'user_avatar.dart';
 
 /// Top application bar containing navigation breadcrumbs, search shortcut,
-/// notification bell, and current user indicator.
+/// notification bell, and an interactive user dropdown menu.
 class TopBar extends StatelessWidget {
   final String breadcrumb;
   final VoidCallback? onMenuPressed;
@@ -16,23 +18,12 @@ class TopBar extends StatelessWidget {
     this.onMenuPressed,
   });
 
-  String _getInitials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty || parts.first.isEmpty) return 'ST';
-    if (parts.length == 1) {
-      return parts.first.substring(0, math.min(2, parts.first.length)).toUpperCase();
-    }
-    return '${parts.first[0]}${parts[1][0]}'.toUpperCase();
-  }
-
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final displayName = (user?.displayName != null && user!.displayName!.trim().isNotEmpty)
         ? user.displayName!.trim()
         : 'Student';
-    final initials = _getInitials(displayName);
-    final photoUrl = user?.photoURL;
 
     return Container(
       height: 64,
@@ -54,28 +45,36 @@ class TopBar extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
           ],
 
-          // Breadcrumbs
+          // Breadcrumbs (clickable to return to Dashboard if on another screen)
           Expanded(
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.folder_outlined,
-                  size: 16,
-                  color: AppColors.textSecondary,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Flexible(
-                  child: Text(
-                    breadcrumb,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+            child: InkWell(
+              onTap: () {
+                if (breadcrumb.contains('Profile') || breadcrumb.contains('Entries')) {
+                  Navigator.of(context).pushReplacementNamed(AppRoutes.dashboard);
+                }
+              },
+              borderRadius: BorderRadius.circular(4),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.folder_outlined,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Flexible(
+                    child: Text(
+                      breadcrumb,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
@@ -177,58 +176,115 @@ class TopBar extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.md),
 
-          // User Block
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: AppColors.sidebarActive,
-                backgroundImage: (photoUrl != null && photoUrl.isNotEmpty)
-                    ? NetworkImage(photoUrl)
-                    : null,
-                child: (photoUrl == null || photoUrl.isEmpty)
-                    ? Text(
-                        initials,
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      )
-                    : null,
-              ),
-              if (MediaQuery.of(context).size.width >= 768) ...[
-                const SizedBox(width: AppSpacing.sm),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          // User Block with Dropdown Menu
+          PopupMenuButton<String>(
+            tooltip: 'User profile & actions',
+            offset: const Offset(0, 48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              side: const BorderSide(color: AppColors.border),
+            ),
+            onSelected: (value) async {
+              if (value == 'profile') {
+                Navigator.of(context).pushReplacementNamed(AppRoutes.profile);
+              } else if (value == 'logout') {
+                final authRepo = AuthScope.of(context);
+                await authRepo.signOut();
+                if (context.mounted) {
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                }
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'profile',
+                child: Row(
                   children: [
+                    Icon(
+                      Icons.person_outline_rounded,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                    SizedBox(width: AppSpacing.sm),
                     Text(
-                      displayName,
-                      style: const TextStyle(
+                      'Profile & settings',
+                      style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      user?.email ?? 'Student',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: AppColors.textSecondary,
-                  size: 18,
+              ),
+              const PopupMenuDivider(height: 1),
+              const PopupMenuItem(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.logout_rounded,
+                      size: 18,
+                      color: AppColors.danger,
+                    ),
+                    SizedBox(width: AppSpacing.sm),
+                    Text(
+                      'Log out',
+                      style: TextStyle(
+                        color: AppColors.danger,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ],
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    UserAvatar(
+                      user: user,
+                      radius: 17,
+                    ),
+                    if (MediaQuery.of(context).size.width >= 768) ...[
+                      const SizedBox(width: AppSpacing.sm),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            displayName,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            user?.email ?? 'Student',
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.textSecondary,
+                        size: 18,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),

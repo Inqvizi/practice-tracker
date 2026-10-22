@@ -6,6 +6,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 import 'app_logo.dart';
 import 'section_label.dart';
+import 'user_avatar.dart';
 
 /// Navigation sidebar component.
 /// Used directly as a desktop left panel and as a Drawer content for mobile/narrow views.
@@ -51,7 +52,6 @@ class Sidebar extends StatelessWidget {
         ? user.displayName!.trim()
         : 'Student';
     final email = user?.email ?? '';
-    final photoUrl = user?.photoURL;
 
     return Container(
       width: AppSpacing.sidebarWidth,
@@ -121,31 +121,9 @@ class Sidebar extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                        image: (photoUrl != null && photoUrl.isNotEmpty)
-                            ? DecorationImage(
-                                image: NetworkImage(photoUrl),
-                                fit: BoxFit.cover,
-                              )
-                            : null,
-                      ),
-                      child: (photoUrl == null || photoUrl.isEmpty)
-                          ? const Center(
-                              child: Text(
-                                '</>',
-                                style: TextStyle(
-                                  color: AppColors.textLight,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            )
-                          : null,
+                    UserAvatar(
+                      user: user,
+                      radius: 18,
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
