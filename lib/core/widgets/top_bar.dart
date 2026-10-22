@@ -4,6 +4,7 @@ import '../../features/auth/data/auth_scope.dart';
 import '../constants/app_routes.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
+import 'search_dialog.dart';
 import 'user_avatar.dart';
 
 /// Top application bar containing navigation breadcrumbs, search shortcut,
@@ -80,56 +81,70 @@ class TopBar extends StatelessWidget {
 
           // Search Field (desktop/tablet)
           if (MediaQuery.of(context).size.width >= 600) ...[
-            Container(
-              width: 220,
-              height: 38,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.search_rounded,
-                    size: 16,
-                    color: AppColors.textHint,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  const Expanded(
-                    child: Text(
-                      'Search anything…',
-                      style: TextStyle(
-                        color: AppColors.textHint,
-                        fontSize: 12,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+            InkWell(
+              onTap: () => SearchDialog.show(context),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              child: Container(
+                width: 220,
+                height: 38,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.search_rounded,
+                      size: 16,
+                      color: AppColors.textHint,
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: const Text(
-                      '⌘K',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
+                    const SizedBox(width: AppSpacing.sm),
+                    const Expanded(
+                      child: Text(
+                        'Search anything…',
+                        style: TextStyle(
+                          color: AppColors.textHint,
+                          fontSize: 12,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  ),
-                ],
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: const Text(
+                        '⌘K',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(width: AppSpacing.md),
+          ] else ...[
+            IconButton(
+              icon: const Icon(
+                Icons.search_rounded,
+                color: AppColors.textSecondary,
+                size: 22,
+              ),
+              onPressed: () => SearchDialog.show(context),
+              tooltip: 'Search',
+            ),
           ],
 
           // Notification Bell
