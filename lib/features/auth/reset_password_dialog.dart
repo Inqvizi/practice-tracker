@@ -1,12 +1,15 @@
 import 'dart:ui';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/validators/validators.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/primary_button.dart';
+import 'data/auth_scope.dart';
 
 /// Modal dialog for requesting a password reset link.
-/// Features a blurred backdrop, email input, and simulated link dispatch.
+/// Features a blurred backdrop, email input, and secure Firebase reset link dispatch.
 class ResetPasswordDialog extends StatefulWidget {
   const ResetPasswordDialog({super.key});
 
@@ -25,6 +28,7 @@ class ResetPasswordDialog extends StatefulWidget {
 class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
   final _emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -32,23 +36,40 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
     super.dispose();
   }
 
-  void _sendResetLink() {
-    if (_formKey.currentState?.validate() ?? false) {
+  Future<void> _sendResetLink() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    setState(() => _isLoading = true);
+
+    try {
       final email = _emailController.text.trim();
+      final authRepo = AuthScope.of(context);
+      try {
+        await authRepo.sendPasswordReset(email: email);
+      } catch (_) {
+        // За вимогами безпеки ЛР4, завжди показуємо нейтральне повідомлення,
+        // щоб не розкривати наявність адреси у системі.
+      }
+
+      await FirebaseAnalytics.instance.logEvent(name: 'password_reset_requested');
+
+      if (!mounted) return;
       Navigator.of(context).pop();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
-            email.isNotEmpty
-                ? 'Reset link sent to $email'
-                : 'Reset link sent to your email address.',
+            'Якщо обліковий запис існує, лист із посиланням для скидання пароля надіслано.',
           ),
           backgroundColor: AppColors.primary,
           behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
+          duration: Duration(seconds: 4),
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -125,20 +146,13 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
                   hint: 'name@university.edu',
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
+                  enabled: !_isLoading,
                   prefixIcon: const Icon(
                     Icons.mail_outline_rounded,
                     size: 20,
                     color: AppColors.textSecondary,
                   ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter your email address';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email address';
-                    }
-                    return null;
-                  },
+                  validator: Validators.email,
                 ),
                 const SizedBox(height: AppSpacing.xl),
 
@@ -147,7 +161,7 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
                       child: const Text(
                         'Cancel',
                         style: TextStyle(
@@ -160,7 +174,8 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
                     PrimaryButton(
                       text: 'Send reset link',
                       isFullWidth: false,
-                      onPressed: _sendResetLink,
+                      isLoading: _isLoading,
+                      onPressed: _isLoading ? null : _sendResetLink,
                     ),
                   ],
                 ),
