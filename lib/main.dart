@@ -7,15 +7,17 @@ import 'firebase_options.dart';
 
 /// Точка входу в застосунок із ініціалізацією Firebase та Sentry.
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
   await SentryFlutter.init(
     (options) {
       options.dsn = SentryConfig.dsn;
       options.tracesSampleRate = 0;
     },
-    appRunner: () => runApp(const PracticeTrackerApp()),
+    appRunner: () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      runApp(const PracticeTrackerApp());
+    },
   );
 }
