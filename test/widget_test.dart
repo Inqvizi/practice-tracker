@@ -38,31 +38,31 @@ void main() {
   });
 
   group('AuthFailure mapping tests', () {
-    test('maps Firebase exception codes to user-friendly Ukrainian messages', () {
+    test('maps Firebase exception codes to user-friendly English messages', () {
       final userNotFound = AuthFailure.fromFirebaseAuthException(
         FirebaseAuthException(code: 'user-not-found'),
       );
-      expect(userNotFound.message, contains('не знайдено'));
+      expect(userNotFound.message, contains('No user found'));
 
       final wrongPassword = AuthFailure.fromFirebaseAuthException(
         FirebaseAuthException(code: 'wrong-password'),
       );
-      expect(wrongPassword.message, contains('Неправильний пароль'));
+      expect(wrongPassword.message, contains('Wrong password'));
 
       final emailInUse = AuthFailure.fromFirebaseAuthException(
         FirebaseAuthException(code: 'email-already-in-use'),
       );
-      expect(emailInUse.message, contains('вже існує'));
+      expect(emailInUse.message, contains('already exists'));
 
       final weakPassword = AuthFailure.fromFirebaseAuthException(
         FirebaseAuthException(code: 'weak-password'),
       );
-      expect(weakPassword.message, contains('занадто простий'));
+      expect(weakPassword.message, contains('too weak'));
 
       final networkFailed = AuthFailure.fromFirebaseAuthException(
         FirebaseAuthException(code: 'network-request-failed'),
       );
-      expect(networkFailed.message, contains('мережі'));
+      expect(networkFailed.message, contains('Network connection'));
     });
   });
 }

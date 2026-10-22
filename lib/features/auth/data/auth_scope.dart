@@ -15,7 +15,7 @@ class AuthScope extends InheritedWidget {
   /// Отримання екземпляра [AuthRepository] з найближчого [AuthScope] у дереві.
   static AuthRepository of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<AuthScope>();
-    assert(scope != null, 'AuthScope не знайдено в поточному BuildContext');
+    assert(scope != null, 'AuthScope not found in current BuildContext');
     return scope!.repository;
   }
 

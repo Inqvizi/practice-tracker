@@ -68,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Не вдалося увійти. Перевірте зʼєднання або спробуйте пізніше.'),
+          content: Text('Failed to log in. Please check your connection or try again later.'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),

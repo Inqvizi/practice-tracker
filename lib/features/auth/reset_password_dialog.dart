@@ -59,7 +59,7 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Якщо обліковий запис існує, лист із посиланням для скидання пароля надіслано.',
+            'If an account exists for this email address, a password reset link has been sent.',
           ),
           backgroundColor: AppColors.primary,
           behavior: SnackBarBehavior.floating,

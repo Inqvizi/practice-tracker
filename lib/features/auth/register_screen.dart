@@ -75,7 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Не вдалося зареєструватися. Спробуйте пізніше.'),
+          content: Text('Failed to sign up. Please try again later.'),
           backgroundColor: AppColors.error,
           behavior: SnackBarBehavior.floating,
         ),

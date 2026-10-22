@@ -1,48 +1,48 @@
-/// Валідатори для полів введення форм автентифікації та профілю.
+/// Input validation utilities for authentication and profile forms.
 abstract final class Validators {
   static final RegExp _emailRegex = RegExp(
     r'^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$',
   );
 
-  /// Перевірка обов'язкового поля на непорожнє значення.
+  /// Validates that a required field is not empty.
   static String? requiredField(String? value, {String? fieldName}) {
     if (value == null || value.trim().isEmpty) {
       return fieldName != null
-          ? 'Поле "$fieldName" є обовʼязковим.'
-          : 'Це поле є обовʼязковим.';
+          ? 'The "$fieldName" field is required.'
+          : 'This field is required.';
     }
     return null;
   }
 
-  /// Валідація коректності формату електронної пошти.
+  /// Validates standard email address format.
   static String? email(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Введіть адресу електронної пошти.';
+      return 'Please enter your email address.';
     }
     if (!_emailRegex.hasMatch(value.trim())) {
-      return 'Некоректний формат email (наприклад, user@university.edu).';
+      return 'Invalid email format (e.g., student@university.edu).';
     }
     return null;
   }
 
-  /// Валідація пароля (щонайменше 8 символів за вимогами методички ЛР4).
+  /// Validates password length (at least 8 characters).
   static String? password(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Введіть пароль.';
+      return 'Please enter your password.';
     }
     if (value.length < 8) {
-      return 'Пароль повинен містити щонайменше 8 символів.';
+      return 'Password must be at least 8 characters long.';
     }
     return null;
   }
 
-  /// Перевірка збігу пароля та його підтвердження.
+  /// Validates that confirm password matches original password.
   static String? confirmPassword(String? value, String original) {
     if (value == null || value.isEmpty) {
-      return 'Підтвердіть пароль.';
+      return 'Please confirm your password.';
     }
     if (value != original) {
-      return 'Паролі не збігаються.';
+      return 'Passwords do not match.';
     }
     return null;
   }

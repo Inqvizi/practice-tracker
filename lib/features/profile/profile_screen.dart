@@ -117,7 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _refreshUser();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Фото профілю успішно оновлено.'),
+          content: Text('Profile photo updated successfully.'),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
         ),
@@ -135,7 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Не вдалося оновити фото.'),
+          content: Text('Failed to update profile photo.'),
           backgroundColor: AppColors.danger,
           behavior: SnackBarBehavior.floating,
         ),
@@ -172,7 +172,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Фото з компʼютера успішно завантажено!'),
+              content: Text('Profile photo uploaded successfully!'),
               backgroundColor: AppColors.success,
               behavior: SnackBarBehavior.floating,
             ),
@@ -183,7 +183,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Помилка завантаження файлу: $e'),
+            content: Text('Failed to upload photo: $e'),
             backgroundColor: AppColors.danger,
             behavior: SnackBarBehavior.floating,
           ),
@@ -418,7 +418,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Дані профілю успішно оновлено.'),
+          content: Text('Profile details updated successfully.'),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
         ),
@@ -436,7 +436,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Не вдалося зберегти зміни.'),
+          content: Text('Failed to save changes.'),
           backgroundColor: AppColors.danger,
           behavior: SnackBarBehavior.floating,
         ),
@@ -469,7 +469,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Пароль успішно змінено.'),
+          content: Text('Password changed successfully.'),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
         ),
@@ -487,7 +487,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Помилка зміни пароля. Спробуйте пізніше.'),
+          content: Text('Failed to change password. Please try again later.'),
           backgroundColor: AppColors.danger,
           behavior: SnackBarBehavior.floating,
         ),
@@ -831,7 +831,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   enabled: !_isChangingPassword,
                   validator: (val) {
                     if (val == null || val.isEmpty) {
-                      return 'Введіть поточний пароль.';
+                      return 'Please enter your current password.';
                     }
                     return null;
                   },
@@ -899,13 +899,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onPressed: () async {
                 try {
                   await Sentry.captureException(
-                    Exception('Тестова помилка ЛР4 (Sentry Web Integration)'),
+                    Exception('Test error for Lab 4 (Sentry Web Integration)'),
                     stackTrace: StackTrace.current,
                   );
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Тестову помилку успішно надіслано в Sentry!'),
+                      content: Text('Test error sent to Sentry successfully!'),
                       backgroundColor: AppColors.primary,
                       behavior: SnackBarBehavior.floating,
                     ),
@@ -914,7 +914,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Помилка відправки в Sentry: $e'),
+                      content: Text('Failed to send error to Sentry: $e'),
                       backgroundColor: AppColors.danger,
                       behavior: SnackBarBehavior.floating,
                     ),
