@@ -1,8 +1,21 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'app.dart';
+import 'core/config/sentry_config.dart';
+import 'firebase_options.dart';
 
-/// Application entry point.
-void main() {
+/// Точка входу в застосунок із ініціалізацією Firebase та Sentry.
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const PracticeTrackerApp());
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = SentryConfig.dsn;
+      options.tracesSampleRate = 0;
+    },
+    appRunner: () => runApp(const PracticeTrackerApp()),
+  );
 }
