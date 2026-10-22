@@ -5,7 +5,7 @@ import 'app.dart';
 import 'core/config/sentry_config.dart';
 import 'firebase_options.dart';
 
-/// Точка входу в застосунок із ініціалізацією Firebase та Sentry.
+/// Application entry point initializing Firebase and Sentry.
 Future<void> main() async {
   await SentryFlutter.init(
     (options) {

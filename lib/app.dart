@@ -12,7 +12,7 @@ import 'features/entries/entries_screen.dart';
 import 'features/entries/entry_form_screen.dart';
 import 'features/profile/profile_screen.dart';
 
-/// Головний віджет застосунку з реєстрацією [AuthScope], [AuthGate], теми та аналітики.
+/// Main application widget providing [AuthScope], [AuthGate], theme, and analytics.
 class PracticeTrackerApp extends StatefulWidget {
   const PracticeTrackerApp({super.key});
 

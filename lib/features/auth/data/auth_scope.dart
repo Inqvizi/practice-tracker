@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'auth_repository.dart';
 
-/// Власний InheritedWidget для передачі [AuthRepository] вниз по дереву віджетів
-/// без використання сторонніх бібліотек стану (Provider/Bloc), згідно з обмеженнями ЛР4.
+/// Custom InheritedWidget for passing [AuthRepository] down the widget tree
+/// without third-party state management libraries (Provider/Bloc).
 class AuthScope extends InheritedWidget {
   final AuthRepository repository;
 
@@ -12,7 +12,7 @@ class AuthScope extends InheritedWidget {
     required super.child,
   });
 
-  /// Отримання екземпляра [AuthRepository] з найближчого [AuthScope] у дереві.
+  /// Retrieves the [AuthRepository] instance from the nearest [AuthScope] in the tree.
   static AuthRepository of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<AuthScope>();
     assert(scope != null, 'AuthScope not found in current BuildContext');

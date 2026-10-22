@@ -2,19 +2,19 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Сервіс для збереження та завантаження локального фото профілю студента.
-/// Дозволяє обирати локальні файли (PNG, JPG) з компʼютера та зберігати їх у сховищі браузера.
+/// Service for saving and loading local student profile photo.
+/// Enables selecting local image files (PNG, JPG) and storing them in browser storage.
 abstract final class AvatarService {
   static const String _keyPrefix = 'custom_user_avatar_';
 
-  /// Зберігає байти локального фото у сховищі
+  /// Saves local avatar bytes in local storage
   static Future<void> saveLocalAvatar(String uid, Uint8List bytes) async {
     final prefs = await SharedPreferences.getInstance();
     final base64String = base64Encode(bytes);
     await prefs.setString('$_keyPrefix$uid', base64String);
   }
 
-  /// Отримує байти локального фото для користувача
+  /// Retrieves local avatar bytes for user
   static Future<Uint8List?> getLocalAvatar(String uid) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -26,13 +26,13 @@ abstract final class AvatarService {
     }
   }
 
-  /// Видаляє локальне фото (наприклад, якщо вибрано пресет або аватар видалено)
+  /// Removes local avatar (e.g. when switching to preset or resetting)
   static Future<void> clearLocalAvatar(String uid) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('$_keyPrefix$uid');
     } catch (_) {
-      // Ігноруємо помилки очищення
+      // Ignore cleanup errors
     }
   }
 }

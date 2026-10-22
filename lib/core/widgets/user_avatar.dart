@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import '../services/avatar_service.dart';
 import '../theme/app_colors.dart';
 
-/// Віджет для відображення аватара користувача з підтримкою:
-/// 1. Локально завантаженого файлу з компʼютера (Uint8List bytes)
-/// 2. Мережевого посилання (HTTPS URL або пресети Dicebear)
-/// 3. Fallback на стильні ініціали імені студента.
+/// Widget displaying user avatar with support for:
+/// 1. Locally uploaded file from computer (Uint8List bytes)
+/// 2. Network image URL (HTTPS URL or Dicebear presets)
+/// 3. Fallback to initials generated from displayName.
 class UserAvatar extends StatelessWidget {
   final User? user;
   final double radius;
@@ -37,7 +37,7 @@ class UserAvatar extends StatelessWidget {
     final userInitials = initials ?? _getInitials(displayName);
     final photoUrl = user?.photoURL;
 
-    // Якщо передано байти напряму (наприклад, у ProfileScreen)
+    // If bytes are provided directly (e.g. in ProfileScreen preview)
     if (localImageBytes != null) {
       return CircleAvatar(
         radius: radius,
@@ -46,7 +46,7 @@ class UserAvatar extends StatelessWidget {
       );
     }
 
-    // Якщо є локальний uid, перевіряємо збережений локальний аватар
+    // If local user id exists, check locally stored avatar
     final uid = user?.uid;
     if (uid != null) {
       return FutureBuilder<Uint8List?>(

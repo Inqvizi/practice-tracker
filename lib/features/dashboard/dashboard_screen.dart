@@ -104,7 +104,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // STUB (ЛР4): агрегована статистика практики з Cloud Firestore, буде реалізовано пізніше
+  // STUB (Lab 4): aggregated practice statistics from Cloud Firestore, to be implemented in future labs
   Widget _buildStatCards(bool isDesktop) {
     const card1 = StatCard(
       title: 'Total entries',
@@ -153,7 +153,7 @@ class DashboardScreen extends StatelessWidget {
     }
   }
 
-  // STUB (ЛР4): записи практики з Cloud Firestore, буде реалізовано пізніше
+  // STUB (Lab 4): practice entries from Cloud Firestore, to be implemented in future labs
   Widget _buildRecentActivity(BuildContext context, bool isDesktop) {
     final entries = MockData.initialEntries;
 

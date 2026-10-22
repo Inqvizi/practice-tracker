@@ -40,7 +40,7 @@ class Sidebar extends StatelessWidget {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
     } catch (_) {
-      // Ігноруємо помилки або AuthGate оновить інтерфейс
+      // Ignore errors; AuthGate updates the interface automatically
     }
   }
 

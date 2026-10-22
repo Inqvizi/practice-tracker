@@ -3,10 +3,10 @@ import '../models/user_profile.dart';
 
 /// Static mock data for Practice Tracker application.
 abstract final class MockData {
-  /// STUB (ЛР4): група не зберігається у Firebase Auth
+  /// STUB (Lab 4): academic group is not stored in Firebase Auth
   static const String defaultAcademicGroup = 'PZ-32 · Software Engineering';
 
-  /// STUB (ЛР4): моковий профіль студента для збереження зворотної сумісності з ЛР2/ЛР3
+  /// STUB (Lab 4): mock student profile preserved for Lab 2 / Lab 3 compatibility
   static const UserProfile currentUser = UserProfile(
     firstName: 'Oleksandr',
     lastName: 'Firko',
@@ -16,7 +16,7 @@ abstract final class MockData {
     role: 'Student',
   );
 
-  /// STUB (ЛР4): дані з Cloud Firestore, буде реалізовано пізніше
+  /// STUB (Lab 4): practice entries from Cloud Firestore, to be implemented in future labs
   static const List<PracticeEntry> initialEntries = [
     PracticeEntry(
       id: 'entry-1',

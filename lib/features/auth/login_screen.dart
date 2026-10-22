@@ -47,11 +47,11 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text,
       );
 
-      // Логування події аналітики
+      // Log analytics event
       await FirebaseAnalytics.instance.logLogin(loginMethod: 'email');
 
-      // Перехід до Dashboard виконує AuthGate автоматично через authStateChanges.
-      // Якщо екран було відкрито як окремий маршрут поверх іншого — повертаємося до кореня.
+      // AuthGate navigates to Dashboard automatically via authStateChanges.
+      // If opened as a modal or secondary route, pop back to root.
       if (mounted && Navigator.of(context).canPop()) {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }

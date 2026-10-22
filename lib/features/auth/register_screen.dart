@@ -55,10 +55,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: _passwordController.text,
       );
 
-      // Логування події аналітики
+      // Log analytics event
       await FirebaseAnalytics.instance.logSignUp(signUpMethod: 'email');
 
-      // Закриваємо поточний екран і повертаємося до AuthGate, який покаже Dashboard
+      // Close current screen and return to AuthGate, which renders Dashboard
       if (mounted) {
         Navigator.of(context).popUntil((route) => route.isFirst);
       }

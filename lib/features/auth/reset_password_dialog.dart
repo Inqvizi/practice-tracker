@@ -47,8 +47,8 @@ class _ResetPasswordDialogState extends State<ResetPasswordDialog> {
       try {
         await authRepo.sendPasswordReset(email: email);
       } catch (_) {
-        // За вимогами безпеки ЛР4, завжди показуємо нейтральне повідомлення,
-        // щоб не розкривати наявність адреси у системі.
+        // For security reasons, always show a neutral confirmation message
+        // to prevent disclosing whether an email exists in the system.
       }
 
       await FirebaseAnalytics.instance.logEvent(name: 'password_reset_requested');

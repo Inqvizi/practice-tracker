@@ -5,8 +5,8 @@ import '../dashboard/dashboard_screen.dart';
 import 'data/auth_scope.dart';
 import 'login_screen.dart';
 
-/// Шлюз авторизації, що реагує на потік змін [authStateChanges] від Firebase Auth.
-/// Автоматично перемикає між [DashboardScreen] та [LoginScreen] без ручного збереження сесії.
+/// Authentication gate reacting to the [authStateChanges] stream from Firebase Auth.
+/// Automatically switches between [DashboardScreen] and [LoginScreen] without manual session handling.
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 

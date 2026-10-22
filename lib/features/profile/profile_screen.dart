@@ -55,7 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _firstNameController = TextEditingController();
     _lastNameController = TextEditingController();
     _groupSpecialtyController = TextEditingController(
-      text: MockData.defaultAcademicGroup, // STUB (ЛР4): група не зберігається у Firebase Auth
+      text: MockData.defaultAcademicGroup, // STUB (Lab 4): academic group is not stored in Firebase Auth
     );
     _emailController = TextEditingController();
 
