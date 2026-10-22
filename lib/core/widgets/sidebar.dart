@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../features/auth/data/auth_scope.dart';
 import '../constants/app_routes.dart';
@@ -47,7 +46,7 @@ class Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = AuthScope.of(context).currentUser;
     final displayName = (user?.displayName != null && user!.displayName!.trim().isNotEmpty)
         ? user.displayName!.trim()
         : 'Student';

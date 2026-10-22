@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/data/mock_data.dart';
@@ -10,6 +9,7 @@ import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/section_label.dart';
 import '../../core/widgets/stat_card.dart';
 import '../../core/widgets/status_badge.dart';
+import '../auth/data/auth_scope.dart';
 
 /// Screen FR-4: Dashboard screen displaying student metrics and recent diary entries.
 class DashboardScreen extends StatelessWidget {
@@ -53,7 +53,7 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context, bool isDesktop) {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = AuthScope.of(context).currentUser;
     final firstName = (user?.displayName != null && user!.displayName!.trim().isNotEmpty)
         ? user.displayName!.trim().split(' ').first
         : 'Student';
@@ -104,6 +104,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  // STUB (ЛР4): агрегована статистика практики з Cloud Firestore, буде реалізовано пізніше
   Widget _buildStatCards(bool isDesktop) {
     const card1 = StatCard(
       title: 'Total entries',
@@ -152,6 +153,7 @@ class DashboardScreen extends StatelessWidget {
     }
   }
 
+  // STUB (ЛР4): записи практики з Cloud Firestore, буде реалізовано пізніше
   Widget _buildRecentActivity(BuildContext context, bool isDesktop) {
     final entries = MockData.initialEntries;
 

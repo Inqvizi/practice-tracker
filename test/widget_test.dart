@@ -18,7 +18,7 @@ void main() {
       expect(Validators.email('not-an-email'), isNotNull);
       expect(Validators.email('student@'), isNotNull);
       expect(Validators.email('student@university.edu'), isNull);
-      expect(Validators.email('oleksandr.firko@lpnu.ua'), isNull);
+      expect(Validators.email('student.doe@lpnu.ua'), isNull);
     });
 
     test('password validator enforces minimum 8 characters', () {

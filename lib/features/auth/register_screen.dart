@@ -161,7 +161,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   Expanded(
                                     child: AppTextField(
                                       label: 'First name',
-                                      hint: 'Oleksandr',
+                                      hint: 'e.g. John',
                                       controller: _firstNameController,
                                       enabled: !_isLoading,
                                       validator: (val) => Validators.requiredField(
@@ -174,7 +174,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   Expanded(
                                     child: AppTextField(
                                       label: 'Last name',
-                                      hint: 'Firko',
+                                      hint: 'e.g. Doe',
                                       controller: _lastNameController,
                                       enabled: !_isLoading,
                                       validator: (val) => Validators.requiredField(
@@ -190,7 +190,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               // Email
                               AppTextField(
                                 label: 'Email address',
-                                hint: 'oleksandr.firko@university.edu',
+                                hint: 'student@university.edu',
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
                                 enabled: !_isLoading,

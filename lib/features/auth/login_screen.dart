@@ -157,7 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Email
                           AppTextField(
                             label: 'Email address',
-                            hint: 'oleksandr.firko@university.edu',
+                            hint: 'student@university.edu',
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
                             enabled: !_isLoading,

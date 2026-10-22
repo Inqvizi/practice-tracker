@@ -15,6 +15,7 @@ import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/section_label.dart';
 import '../../core/widgets/user_avatar.dart';
+import '../../core/data/mock_data.dart';
 import '../auth/data/auth_scope.dart';
 
 /// Screen FR-3 / FR-6: Student profile overview and security settings.
@@ -46,25 +47,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isSavingPersonal = false;
   bool _isChangingPassword = false;
 
+  bool _initialized = false;
+
   @override
   void initState() {
     super.initState();
-    _currentUser = FirebaseAuth.instance.currentUser;
-
-    final names = (_currentUser?.displayName ?? 'Oleksandr Firko').split(' ');
-    final firstName = names.isNotEmpty ? names.first : 'Oleksandr';
-    final lastName = names.length > 1 ? names.sublist(1).join(' ') : 'Firko';
-
-    _firstNameController = TextEditingController(text: firstName);
-    _lastNameController = TextEditingController(text: lastName);
-    _groupSpecialtyController = TextEditingController(text: 'PZ-32 · Software Engineering');
-    _emailController = TextEditingController(text: _currentUser?.email ?? 'oleksandr.firko@university.edu');
+    _firstNameController = TextEditingController();
+    _lastNameController = TextEditingController();
+    _groupSpecialtyController = TextEditingController(
+      text: MockData.defaultAcademicGroup, // STUB (ЛР4): група не зберігається у Firebase Auth
+    );
+    _emailController = TextEditingController();
 
     _currentPasswordController = TextEditingController();
     _newPasswordController = TextEditingController();
     _confirmPasswordController = TextEditingController();
+  }
 
-    _loadLocalAvatar();
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      _currentUser = AuthScope.of(context).currentUser;
+
+      final names = (_currentUser?.displayName ?? '').split(' ');
+      final firstName = names.isNotEmpty ? names.first : '';
+      final lastName = names.length > 1 ? names.sublist(1).join(' ') : '';
+
+      _firstNameController.text = firstName;
+      _lastNameController.text = lastName;
+      _emailController.text = _currentUser?.email ?? '';
+
+      _loadLocalAvatar();
+    }
   }
 
   Future<void> _loadLocalAvatar() async {
@@ -93,7 +109,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _refreshUser() {
     setState(() {
-      _currentUser = FirebaseAuth.instance.currentUser;
+      _currentUser = AuthScope.of(context).currentUser;
       if (_currentUser != null) {
         _emailController.text = _currentUser!.email ?? '';
       }
@@ -350,6 +366,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             }
                           },
                         ),
+                        if (selectedUrl != null &&
+                            selectedUrl!.startsWith('https://')) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.sm),
+                            decoration: BoxDecoration(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Row(
+                              children: [
+                                ClipOval(
+                                  child: Image.network(
+                                    selectedUrl!,
+                                    width: 44,
+                                    height: 44,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) => Container(
+                                      width: 44,
+                                      height: 44,
+                                      color: AppColors.danger.withValues(alpha: 0.12),
+                                      child: const Icon(
+                                        Icons.broken_image_rounded,
+                                        color: AppColors.danger,
+                                        size: 22,
+                                      ),
+                                    ),
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return const SizedBox(
+                                        width: 44,
+                                        height: 44,
+                                        child: Center(
+                                          child: SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(strokeWidth: 2),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                const Expanded(
+                                  child: Text(
+                                    'URL Image Preview (validating HTTPS)',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -765,7 +840,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Expanded(
                       child: AppTextField(
                         label: 'First name',
-                        hint: 'Oleksandr',
+                        hint: 'e.g. John',
                         controller: _firstNameController,
                         enabled: !_isSavingPersonal,
                         validator: (val) => Validators.requiredField(
@@ -778,7 +853,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Expanded(
                       child: AppTextField(
                         label: 'Last name',
-                        hint: 'Firko',
+                        hint: 'e.g. Doe',
                         controller: _lastNameController,
                         enabled: !_isSavingPersonal,
                         validator: (val) => Validators.requiredField(
@@ -792,7 +867,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: AppSpacing.lg),
                 AppTextField(
                   label: 'Group / Specialty',
-                  hint: 'PZ-32 · Software Engineering',
+                  hint: 'e.g. PZ-32 · Software Engineering',
                   controller: _groupSpecialtyController,
                   enabled: !_isSavingPersonal,
                 ),
