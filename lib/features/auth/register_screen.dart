@@ -1,12 +1,16 @@
 import 'dart:math' as math;
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_routes.dart';
+import '../../core/errors/auth_failure.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/validators/validators.dart';
 import '../../core/widgets/app_logo.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/section_label.dart';
+import 'data/auth_scope.dart';
 
 /// Screen FR-1: Student registration screen.
 /// Features a two-panel adaptive layout (hero banner on desktop, form on right),
@@ -20,11 +24,11 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _firstNameController = TextEditingController(text: 'Oleksandr');
-  final _lastNameController = TextEditingController(text: 'Firko');
-  final _emailController =
-      TextEditingController(text: 'oleksandr.firko@university.edu');
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -33,20 +37,53 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _lastNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _handleRegister() {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _isLoading = true);
+  Future<void> _handleRegister() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (!mounted) return;
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          AppRoutes.dashboard,
-          (route) => false,
-        );
-      });
+    setState(() => _isLoading = true);
+
+    try {
+      final authRepo = AuthScope.of(context);
+      await authRepo.signUp(
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      // Логування події аналітики
+      await FirebaseAnalytics.instance.logSignUp(signUpMethod: 'email');
+
+      // Закриваємо поточний екран і повертаємося до AuthGate, який покаже Dashboard
+      if (mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    } on AuthFailure catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Не вдалося зареєструватися. Спробуйте пізніше.'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -126,12 +163,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       label: 'First name',
                                       hint: 'Oleksandr',
                                       controller: _firstNameController,
-                                      validator: (val) {
-                                        if (val == null || val.trim().isEmpty) {
-                                          return 'Required';
-                                        }
-                                        return null;
-                                      },
+                                      enabled: !_isLoading,
+                                      validator: (val) => Validators.requiredField(
+                                        val,
+                                        fieldName: 'First name',
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: AppSpacing.md),
@@ -140,12 +176,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       label: 'Last name',
                                       hint: 'Firko',
                                       controller: _lastNameController,
-                                      validator: (val) {
-                                        if (val == null || val.trim().isEmpty) {
-                                          return 'Required';
-                                        }
-                                        return null;
-                                      },
+                                      enabled: !_isLoading,
+                                      validator: (val) => Validators.requiredField(
+                                        val,
+                                        fieldName: 'Last name',
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -158,20 +193,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 hint: 'oleksandr.firko@university.edu',
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
+                                enabled: !_isLoading,
                                 prefixIcon: const Icon(
                                   Icons.mail_outline_rounded,
                                   size: 19,
                                   color: AppColors.textSecondary,
                                 ),
-                                validator: (val) {
-                                  if (val == null || val.trim().isEmpty) {
-                                    return 'Please enter your email';
-                                  }
-                                  if (!val.contains('@')) {
-                                    return 'Please enter a valid email';
-                                  }
-                                  return null;
-                                },
+                                validator: Validators.email,
                               ),
                               const SizedBox(height: AppSpacing.lg),
 
@@ -181,17 +209,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 hint: 'At least 8 characters',
                                 controller: _passwordController,
                                 isPassword: true,
+                                enabled: !_isLoading,
                                 prefixIcon: const Icon(
                                   Icons.lock_outline_rounded,
                                   size: 19,
                                   color: AppColors.textSecondary,
                                 ),
-                                validator: (val) {
-                                  if (val == null || val.length < 6) {
-                                    return 'Password must be at least 6 characters';
-                                  }
-                                  return null;
-                                },
+                                validator: Validators.password,
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+
+                              // Confirm Password
+                              AppTextField(
+                                label: 'Confirm password',
+                                hint: 'Repeat your password',
+                                controller: _confirmPasswordController,
+                                isPassword: true,
+                                enabled: !_isLoading,
+                                prefixIcon: const Icon(
+                                  Icons.lock_reset_rounded,
+                                  size: 19,
+                                  color: AppColors.textSecondary,
+                                ),
+                                validator: (val) => Validators.confirmPassword(
+                                  val,
+                                  _passwordController.text,
+                                ),
                               ),
                               const SizedBox(height: AppSpacing.xl),
 
@@ -199,7 +242,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               PrimaryButton(
                                 text: 'Sign up',
                                 isLoading: _isLoading,
-                                onPressed: _handleRegister,
+                                onPressed: _isLoading ? null : _handleRegister,
                               ),
                               const SizedBox(height: AppSpacing.lg),
 
@@ -218,9 +261,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     ),
                                     GestureDetector(
                                       onTap: () {
-                                        Navigator.of(context).pushReplacementNamed(
-                                          AppRoutes.login,
-                                        );
+                                        if (Navigator.of(context).canPop()) {
+                                          Navigator.of(context).pop();
+                                        } else {
+                                          Navigator.of(context).pushReplacementNamed(
+                                            AppRoutes.login,
+                                          );
+                                        }
                                       },
                                       child: const Text(
                                         'Log in',

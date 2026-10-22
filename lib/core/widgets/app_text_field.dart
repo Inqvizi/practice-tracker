@@ -9,6 +9,7 @@ class AppTextField extends StatefulWidget {
   final TextEditingController? controller;
   final bool isPassword;
   final bool readOnly;
+  final bool enabled;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final String? Function(String?)? validator;
@@ -24,6 +25,7 @@ class AppTextField extends StatefulWidget {
     this.controller,
     this.isPassword = false,
     this.readOnly = false,
+    this.enabled = true,
     this.prefixIcon,
     this.suffixIcon,
     this.validator,
@@ -66,6 +68,7 @@ class _AppTextFieldState extends State<AppTextField> {
           controller: widget.controller,
           obscureText: _obscureText,
           readOnly: widget.readOnly,
+          enabled: widget.enabled,
           keyboardType: widget.keyboardType,
           maxLines: widget.isPassword ? 1 : widget.maxLines,
           validator: widget.validator,

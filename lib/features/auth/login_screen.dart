@@ -1,17 +1,20 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_routes.dart';
-import '../../core/data/mock_data.dart';
+import '../../core/errors/auth_failure.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/validators/validators.dart';
 import '../../core/widgets/app_logo.dart';
 import '../../core/widgets/app_text_field.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/section_label.dart';
+import 'data/auth_scope.dart';
 import 'reset_password_dialog.dart';
 
 /// Screen FR-2: Student login screen.
 /// Includes background radial glow, centered card container,
-/// forgot password modal trigger, and direct navigation to Dashboard.
+/// forgot password modal trigger, and Firebase Authentication integration.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -21,17 +24,9 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _emailController;
-  late final TextEditingController _passwordController;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // Pre-populate with default student credential mock
-    _emailController = TextEditingController(text: MockData.currentUser.email);
-    _passwordController = TextEditingController(text: 'studentPass2025!');
-  }
 
   @override
   void dispose() {
@@ -40,18 +35,48 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _isLoading = true);
+  Future<void> _handleLogin() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
-      // Simulated seamless login
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (!mounted) return;
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          AppRoutes.dashboard,
-          (route) => false,
-        );
-      });
+    setState(() => _isLoading = true);
+
+    try {
+      final authRepo = AuthScope.of(context);
+      await authRepo.signIn(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      // Логування події аналітики
+      await FirebaseAnalytics.instance.logLogin(loginMethod: 'email');
+
+      // Перехід до Dashboard виконує AuthGate автоматично через authStateChanges.
+      // Якщо екран було відкрито як окремий маршрут поверх іншого — повертаємося до кореня.
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    } on AuthFailure catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Не вдалося увійти. Перевірте зʼєднання або спробуйте пізніше.'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -135,17 +160,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             hint: 'oleksandr.firko@university.edu',
                             controller: _emailController,
                             keyboardType: TextInputType.emailAddress,
+                            enabled: !_isLoading,
                             prefixIcon: const Icon(
                               Icons.mail_outline_rounded,
                               size: 19,
                               color: AppColors.textSecondary,
                             ),
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Please enter your email';
-                              }
-                              return null;
-                            },
+                            validator: Validators.email,
                           ),
                           const SizedBox(height: AppSpacing.lg),
 
@@ -155,17 +176,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             hint: '••••••••',
                             controller: _passwordController,
                             isPassword: true,
+                            enabled: !_isLoading,
                             prefixIcon: const Icon(
                               Icons.lock_outline_rounded,
                               size: 19,
                               color: AppColors.textSecondary,
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter your password';
-                              }
-                              return null;
-                            },
+                            validator: Validators.password,
                           ),
                           const SizedBox(height: AppSpacing.sm),
 
@@ -173,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () => ResetPasswordDialog.show(context),
+                              onPressed: _isLoading ? null : () => ResetPasswordDialog.show(context),
                               style: TextButton.styleFrom(
                                 padding: EdgeInsets.zero,
                                 minimumSize: Size.zero,
@@ -195,7 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           PrimaryButton(
                             text: 'Log in',
                             isLoading: _isLoading,
-                            onPressed: _handleLogin,
+                            onPressed: _isLoading ? null : _handleLogin,
                           ),
                           const SizedBox(height: AppSpacing.lg),
 

@@ -33,6 +33,7 @@ abstract final class AppColors {
 
   // Alerts & Actions
   static const Color danger = Color(0xFFC0392B);
+  static const Color error = danger;
   static const Color dangerLight = Color(0xFFFCEBEB);
   static const Color success = Color(0xFF2E6B4A);
   static const Color notificationDot = Color(0xFFE74C3C);
